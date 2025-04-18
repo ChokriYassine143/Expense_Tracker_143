@@ -38,6 +38,7 @@ const Register = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       await register(values.email, values.name, values.password);
+      // Explicitly navigate to dashboard after successful registration
       navigate('/dashboard');
     } catch (error) {
       // Error handling is done in the Auth context
