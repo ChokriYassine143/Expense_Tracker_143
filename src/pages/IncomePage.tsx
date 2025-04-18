@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -18,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useTransactions } from '@/contexts/TransactionContext';
+import { Transaction } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 
 const formSchema = z.object({
@@ -26,6 +26,8 @@ const formSchema = z.object({
   category: z.string().min(1, { message: "Please select a category" }),
   date: z.date(),
 });
+
+type IncomeFormValues = z.infer<typeof formSchema>;
 
 const IncomePage = () => {
   const { transactions, categories, addTransaction, deleteTransaction } = useTransactions();
@@ -41,7 +43,7 @@ const IncomePage = () => {
     
   const incomeCategories = categories.filter(c => c.type === 'income');
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<IncomeFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: 0,
@@ -51,11 +53,17 @@ const IncomePage = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addTransaction({
-      ...values,
+  const onSubmit = (values: IncomeFormValues) => {
+    const newTransaction: Omit<Transaction, 'id'> = {
+      amount: values.amount,
+      description: values.description,
+      category: values.category,
+      date: values.date.toISOString(),
       type: 'income',
-    });
+    };
+    
+    addTransaction(newTransaction);
+    
     form.reset({
       amount: 0,
       description: "",

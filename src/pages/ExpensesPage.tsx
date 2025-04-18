@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -28,6 +27,8 @@ const formSchema = z.object({
   date: z.date(),
 });
 
+type ExpenseFormValues = z.infer<typeof formSchema>;
+
 const ExpensesPage = () => {
   const { transactions, categories, addTransaction, deleteTransaction } = useTransactions();
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +43,7 @@ const ExpensesPage = () => {
     
   const expenseCategories = categories.filter(c => c.type === 'expense');
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: 0,
@@ -52,11 +53,17 @@ const ExpensesPage = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addTransaction({
-      ...values,
+  const onSubmit = (values: ExpenseFormValues) => {
+    const newTransaction: Omit<Transaction, 'id'> = {
+      amount: values.amount,
+      description: values.description,
+      category: values.category,
+      date: values.date.toISOString(),
       type: 'expense',
-    });
+    };
+    
+    addTransaction(newTransaction);
+    
     form.reset({
       amount: 0,
       description: "",
@@ -73,7 +80,6 @@ const ExpensesPage = () => {
       </div>
       
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Add Expense Form */}
         <Card>
           <CardHeader>
             <CardTitle>Add New Expense</CardTitle>
@@ -184,7 +190,6 @@ const ExpensesPage = () => {
           </CardContent>
         </Card>
         
-        {/* Expense List */}
         <Card>
           <CardHeader>
             <CardTitle>Expense History</CardTitle>
