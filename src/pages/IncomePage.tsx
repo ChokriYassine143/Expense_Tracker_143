@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -20,7 +21,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { useTransactions } from '@/contexts/TransactionContext';
 import { Transaction } from '@/types';
 import { formatCurrency } from '@/lib/utils';
-import EmojiPicker from '@/components/EmojiPicker';
+import EmojiPicker from '@/components/EmojiPicker'; // Changed from named import to default import
 import { exportToExcel } from '@/utils/exportUtils';
 
 const formSchema = z.object({
