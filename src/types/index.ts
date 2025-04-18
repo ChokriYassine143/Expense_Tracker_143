@@ -1,4 +1,3 @@
-
 export type User = {
   id: string;
   email: string;
@@ -7,13 +6,14 @@ export type User = {
 
 export type TransactionType = 'expense' | 'income';
 
-export type Transaction = {
+export interface Transaction {
   id: string;
+  type: TransactionType;
   amount: number;
   description: string;
   category: string;
   date: string;
-  type: TransactionType;
+  emoji?: string;
 }
 
 export type Category = {

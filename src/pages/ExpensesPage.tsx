@@ -6,7 +6,8 @@ import {
   ArrowDownCircle, 
   CalendarIcon, 
   Search, 
-  Trash2 
+  Trash2, 
+  Download 
 } from 'lucide-react';
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { useTransactions } from '@/contexts/TransactionContext';
 import { Transaction } from '@/types';
 import { formatCurrency } from '@/lib/utils';
+import { EmojiPicker } from '@/components/EmojiPicker';
+import { exportToExcel } from '@/utils/exportUtils';
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: "Amount must be a positive number" }),
@@ -32,6 +35,7 @@ type ExpenseFormValues = z.infer<typeof formSchema>;
 const ExpensesPage = () => {
   const { transactions, categories, addTransaction, deleteTransaction } = useTransactions();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEmoji, setSelectedEmoji] = useState<string>('');
   
   const expenses = transactions
     .filter(t => t.type === 'expense')
@@ -60,10 +64,11 @@ const ExpensesPage = () => {
       category: values.category,
       date: values.date.toISOString(),
       type: 'expense',
+      emoji: selectedEmoji,
     };
     
     addTransaction(newTransaction);
-    
+    setSelectedEmoji('');
     form.reset({
       amount: 0,
       description: "",
@@ -74,9 +79,19 @@ const ExpensesPage = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
-        <p className="text-muted-foreground">Manage and track your expenses</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
+          <p className="text-muted-foreground">Manage and track your expenses</p>
+        </div>
+        <Button 
+          variant="outline"
+          onClick={() => exportToExcel(transactions, 'expense')}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Export
+        </Button>
       </div>
       
       <div className="grid gap-6 md:grid-cols-2">
@@ -88,24 +103,32 @@ const ExpensesPage = () => {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amount ($)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex items-center gap-4">
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Amount ($)</FormLabel>
+                        <div className="flex gap-2">
+                          <EmojiPicker 
+                            onEmojiSelect={setSelectedEmoji} 
+                            selectedEmoji={selectedEmoji}
+                          />
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.01" 
+                              placeholder="0.00" 
+                              {...field} 
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <FormField
                   control={form.control}
@@ -213,7 +236,11 @@ const ExpensesPage = () => {
                     className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
                   >
                     <div className="flex items-center gap-3">
-                      <ArrowDownCircle className="h-5 w-5 text-expense" />
+                      {expense.emoji ? (
+                        <span className="text-xl">{expense.emoji}</span>
+                      ) : (
+                        <ArrowDownCircle className="h-5 w-5 text-expense" />
+                      )}
                       <div>
                         <div className="font-medium">{expense.description}</div>
                         <div className="text-xs text-muted-foreground">
