@@ -7,6 +7,7 @@ export type User = {
 export type TransactionType = 'expense' | 'income';
 
 export interface Transaction {
+  _id: string;
   id: string;
   type: TransactionType;
   amount: number;

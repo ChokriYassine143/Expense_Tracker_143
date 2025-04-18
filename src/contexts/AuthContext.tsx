@@ -1,5 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 import { User } from '@/types';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -26,99 +26,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Check for saved user on mount
+  // Check for saved token on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Verify token and get user
+      axios.get('https://backend-expense-tracker-9lb3.onrender.com/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+        .then(response => {
+          if (response.data.user) {
+            setUser(response.data.user);
+          } else {
+            localStorage.removeItem('token');
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  // Mock login function (in a real app, this would call an API)
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, just check if the email exists in localStorage
-      const savedUsers = localStorage.getItem('users');
-      const users = savedUsers ? JSON.parse(savedUsers) : [];
-      const foundUser = users.find((u: any) => u.email === email);
-      
-      if (!foundUser || foundUser.password !== password) {
-        throw new Error('Invalid email or password');
-      }
-      
-      // Remove password from user object
-      const { password: _, ...userWithoutPassword } = foundUser;
-      
-      // Save to state and localStorage
-      setUser(userWithoutPassword);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      
+      const response = await axios.post('https://backend-expense-tracker-9lb3.onrender.com/api/auth/login', {
+        email,
+        password,
+      });
+
+      setUser(response.data.user);
+      localStorage.setItem('token', response.data.token);
+
       toast({
         title: "Logged in successfully",
-        description: `Welcome back, ${userWithoutPassword.name}!`,
+        description: `Welcome back, ${response.data.user.name}!`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Login failed';
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: errorMessage,
       });
-      throw error;
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Mock register function
   const register = async (email: string, name: string, password: string) => {
     try {
       setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check if user already exists
-      const savedUsers = localStorage.getItem('users');
-      const users = savedUsers ? JSON.parse(savedUsers) : [];
-      
-      if (users.some((u: any) => u.email === email)) {
-        throw new Error('User with this email already exists');
-      }
-      
-      // Create new user
-      const newUser = {
-        id: `user-${Date.now()}`,
+      const response = await axios.post('https://backend-expense-tracker-9lb3.onrender.com/api/auth/register', {
         email,
         name,
-        password, // In a real app, never store passwords in plain text
-      };
-      
-      // Save to localStorage (users collection)
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Remove password from user object for state
-      const { password: _, ...userWithoutPassword } = newUser;
-      
-      // Save to state and localStorage (current user)
-      setUser(userWithoutPassword);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      
+        password,
+      });
+
+      setUser(response.data.user);
+      localStorage.setItem('token', response.data.token);
+
       toast({
         title: "Registration successful",
         description: `Welcome, ${name}!`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Registration failed';
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: errorMessage,
       });
-      throw error;
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     toast({
       title: "Logged out",
       description: "You have been logged out successfully",

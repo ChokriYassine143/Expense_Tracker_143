@@ -9,12 +9,13 @@ import { formatCurrency } from '@/lib/utils';
 
 interface ExpensesListProps {
   expenses: Transaction[];
-  onDelete: (id: string) => void;
+  onDelete: (_id: string) => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
 }
 
 const ExpensesList = ({ expenses, onDelete, searchTerm, onSearchChange }: ExpensesListProps) => {
+  console.log(expenses);
   return (
     <Card>
       <CardHeader>
@@ -35,7 +36,7 @@ const ExpensesList = ({ expenses, onDelete, searchTerm, onSearchChange }: Expens
           {expenses.length > 0 ? (
             expenses.map((expense) => (
               <div 
-                key={expense.id}
+                key={expense._id}
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
               >
                 <div className="flex items-center gap-3">
@@ -58,7 +59,7 @@ const ExpensesList = ({ expenses, onDelete, searchTerm, onSearchChange }: Expens
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => onDelete(expense.id)}
+                    onClick={() => {console.log(expense._id); onDelete(expense._id)}}
                   >
                     <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                   </Button>

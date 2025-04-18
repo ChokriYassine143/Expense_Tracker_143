@@ -9,7 +9,7 @@ export const exportToExcel = (transactions: Transaction[], type: 'expense' | 'in
     ...transactions
       .filter(t => t.type === type)
       .map(t => [
-        new Date(t.date).toLocaleDateString(),
+       new Date(t.date).toLocaleDateString(),
         `"${t.description}"`,
         t.category,
         t.amount.toString(),

@@ -43,7 +43,7 @@ const ExpenseForm = ({ categories, onSubmit }: ExpenseFormProps) => {
   });
 
   const handleSubmit = (values: ExpenseFormValues) => {
-    const newTransaction: Omit<Transaction, 'id'> = {
+    const newTransaction: Omit<Transaction, '_id'> = {
       amount: values.amount,
       description: values.description,
       category: values.category,
